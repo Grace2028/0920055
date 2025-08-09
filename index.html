@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>紅豆餅製造流程 — 簡易示範頁</title>
+  <style>
+    :root{
+      --bg:#fff7f5;
+      --panel:#fff1ef;
+      --accent:#ff6b6b;
+      --muted:#6b6b6b;
+      --belt:#5c4033;
+    }
+    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans TC',sans-serif}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),#ffecec);color:#2b2b2b;padding:24px}
+    .container{max-width:980px;margin:0 auto}
+    header{display:flex;align-items:center;gap:16px}
+    header h1{margin:0;font-size:20px}
+    .controls{margin-left:auto;display:flex;gap:8px;align-items:center}
+    button{background:var(--accent);border:none;color:white;padding:8px 12px;border-radius:10px;cursor:pointer}
+    button.secondary{background:transparent;color:var(--accent);border:2px solid var(--accent)}
+
+    /* 製程面板 */
+    .panel{background:var(--panel);padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.06);margin-top:18px}
+    .stage-row{display:flex;gap:12px;align-items:flex-start}
+    .stage{flex:1;padding:12px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.6),transparent);min-height:120px}
+    .stage h3{margin:0 0 8px 0;font-size:14px}
+    .icon{font-size:28px}
+    .muted{color:var(--muted);font-size:13px}
+
+    /* 傳送帶與動畫區 */
+    .factory{margin-top:16px;position:relative;height:220px;overflow:hidden;border-radius:12px;background:linear-gradient(180deg,#fff,#fff7f2);border:1px solid rgba(0,0,0,0.04)}
+    .belt{position:absolute;left:0;right:0;bottom:20px;height:60px;background:repeating-linear-gradient(90deg,var(--belt) 0 40px, #7b5a48 40px 80px);transform:skewY(-3deg)}
+    .tray{position:absolute;left:-120px;bottom:80px;width:110px;height:60px;border-radius:8px;background:#f6d7d7;display:flex;align-items:center;justify-content:center;font-weight:700}
+    .cake{width:48px;height:28px;border-radius:6px;background:linear-gradient(180deg,#ffd9d9,#ffb9b9);display:flex;align-items:center;justify-content:center;font-size:12px}
+
+    /* 將托盤沿傳送帶移動 */
+    @keyframes moveTray{from{transform:translateX(-140px)}to{transform:translateX(1100px)}}
+
+    /* 機械手臂 */
+    .arm{position:absolute;left:40px;top:18px;width:160px;height:160px}
+    .arm .base{position:absolute;left:40px;bottom:0;width:40px;height:40px;background:#d8d8d8;border-radius:6px}
+    .arm .upper{position:absolute;left:60px;top:18px;width:10px;height:80px;background:#bfbfbf;transform-origin:top center;border-radius:6px}
+    .arm .lower{position:absolute;left:68px;top:82px;width:10px;height:50px;background:#a9a9a9;transform-origin:top center;border-radius:6px}
+    .arm .hand{position:absolute;left:56px;top:128px;width:48px;height:18px;border-radius:6px;background:#6b6b6b;display:flex;align-items:center;justify-content:center;color:white;font-size:12px}
+
+    @keyframes armSwing{0%{transform:rotate(-6deg)}50%{transform:rotate(18deg)}100%{transform:rotate(-6deg)}}
+
+    /* 小動畫效果 */
+    .sparkle{position:absolute;right:18px;top:18px;font-size:22px;opacity:0;transform:scale(.6);}
+    .zoom-controls{display:flex;gap:6px}
+
+    /* 調色與響應 */
+    .settings{display:flex;gap:12px;align-items:center;margin-top:12px}
+    input[type=range]{width:140px}
+    @media(max-width:720px){header{flex-direction:column;align-items:flex-start}.controls{margin-left:0}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>紅豆餅製造流程 — 簡易互動示範</h1>
+      <div class="controls">
+        <div class="zoom-controls">
+          <button id="zoomOut" class="secondary">-</button>
+          <button id="zoomIn" class="secondary">+</button>
+        </div>
+        <button id="start">開始自動化</button>
+        <button id="stop" class="secondary">停止</button>
+      </div>
+    </header>
+
+    <div class="panel">
+      <div class="stage-row">
+        <div class="stage">
+          <div class="icon">🌾</div>
+          <h3>1. 麵糊準備</h3>
+          <div class="muted">混合麵粉、蛋、牛奶，調成適當濃度。</div>
+        </div>
+        <div class="stage">
+          <div class="icon">🍮</div>
+          <h3>2. 紅豆餡準備</h3>
+          <div class="muted">紅豆煮熟加糖，冷卻成餡料。</div>
+        </div>
+        <div class="stage">
+          <div class="icon">🤖</div>
+          <h3>3. 成型/自動填餡</h3>
+          <div class="muted">機械手臂倒入麵糊、放入紅豆餡後封口。</div>
+        </div>
+        <div class="stage">
+          <div class="icon">🔥</div>
+          <h3>4. 烘烤/煎製</h3>
+          <div class="muted">在平板或模具上烘烤至金黃，控溫很重要。</div>
+        </div>
+      </div>
+
+      <div class="settings">
+        <label>速度 <input id="speed" type="range" min="0.2" max="3" step="0.1" value="1"></label>
+        <label>主色 <input id="accentColor" type="color" value="#ff6b6b"></label>
+        <label>傳送帶色 <input id="beltColor" type="color" value="#5c4033"></label>
+        <div class="muted">提示：調整速度或顏色即可看到動畫變化。</div>
+      </div>
+
+      <div class="factory" id="factory">
+        <div class="arm" id="arm">
+          <div class="base"></div>
+          <div class="upper"></div>
+          <div class="lower"></div>
+          <div class="hand">抓取</div>
+        </div>
+
+        <div class="sparkle" id="spark">✨</div>
+
+        <div class="belt" id="belt"></div>
+
+        <!-- 動態托盤模板（由 JS 複製） -->
+        <div class="tray" id="trayTemplate" style="display:none">
+          <div class="cake">紅豆</div>
+        </div>
+
+      </div>
+    </div>
+
+    <footer style="margin-top:12px;font-size:13px;color:var(--muted)">簡單教學示範 — 這是一個單頁動畫原型，用於說明自動化製作紅豆餅的流程。</footer>
+  </div>
+
+  <script>
+    const startBtn = document.getElementById('start');
+    const stopBtn = document.getElementById('stop');
+    const speedRange = document.getElementById('speed');
+    const accentPicker = document.getElementById('accentColor');
+    const beltPicker = document.getElementById('beltColor');
+    const trayTemplate = document.getElementById('trayTemplate');
+    const factory = document.getElementById('factory');
+    const arm = document.getElementById('arm');
+    const spark = document.getElementById('spark');
+    const belt = document.getElementById('belt');
+    const zoomIn = document.getElementById('zoomIn');
+    const zoomOut = document.getElementById('zoomOut');
+
+    let running = false;
+    let trayInterval = null;
+
+    function setTheme(){
+      document.documentElement.style.setProperty('--accent', accentPicker.value);
+      document.documentElement.style.setProperty('--belt', beltPicker.value);
+    }
+
+    accentPicker.addEventListener('input', setTheme);
+    beltPicker.addEventListener('input', setTheme);
+
+    function spawnTray(){
+      const tray = trayTemplate.cloneNode(true);
+      tray.style.display = 'flex';
+      tray.id = '';
+      tray.style.left = '-140px';
+      tray.style.bottom = '80px';
+      tray.style.position = 'absolute';
+      tray.style.animation = `moveTray ${3/speedRange.value}s linear forwards`;
+      factory.appendChild(tray);
+
+      // 當托盤走到中間，模擬機械手抓取（trigger sparkle）
+      setTimeout(()=>{
+        spark.style.transition='opacity .3s,transform .3s';
+        spark.style.opacity=1; spark.style.transform='scale(1)';
+        setTimeout(()=>{spark.style.opacity=0; spark.style.transform='scale(.6)'},300);
+      }, (1500/speedRange.value));
+
+      // 移除托盤以免堆積
+      tray.addEventListener('animationend',()=> tray.remove());
+    }
+
+    function startProcess(){
+      if(running) return;
+      running = true;
+      arm.style.animation = `armSwing ${1.2/speedRange.value}s ease-in-out infinite`;
+      belt.style.animation = `scrollBelt ${1.8/speedRange.value}s linear infinite`;
+      spawnTray();
+      trayInterval = setInterval(spawnTray, 1400/speedRange.value);
+    }
+
+    function stopProcess(){
+      running = false;
+      arm.style.animation = '';
+      belt.style.animation = '';
+      if(trayInterval) clearInterval(trayInterval);
+      trayInterval = null;
+    }
+
+    startBtn.onclick = startProcess;
+    stopBtn.onclick = stopProcess;
+
+    speedRange.addEventListener('input', ()=>{
+      if(running){
+        // 重啟以應用新速度
+        stopProcess(); startProcess();
+      }
+    });
+
+    // Belt pseudo-animation using background-position via CSS animation inserted dynamically
+    const styleSheet = document.createElement('style');
+    styleSheet.innerHTML = `@keyframes scrollBelt{from{background-position:0 0}to{background-position:160px 0}}`;
+    document.head.appendChild(styleSheet);
+
+    // Zoom controls
+    let scale = 1;
+    zoomIn.addEventListener('click', ()=>{scale = Math.min(1.6, scale+0.1); factory.style.transform = `scale(${scale})`;});
+    zoomOut.addEventListener('click', ()=>{scale = Math.max(.7, scale-0.1); factory.style.transform = `scale(${scale})`;});
+
+    // 初始主題
+    setTheme();
+
+    // Shortcut: auto-start for demo
+    // startProcess();
+  </script>
+</body>
+</html>
